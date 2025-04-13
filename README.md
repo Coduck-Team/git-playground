@@ -33,3 +33,12 @@ git log
 ```
 
 `log`를 통해 `commit` 기록을 확인한다.
+
+
+## push
+
+```shell
+git push <remote> <refspec>
+```
+
+`push`를 통해 `commit`된 변경사항을 remote에 반영한다. 
