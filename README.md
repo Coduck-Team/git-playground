@@ -25,3 +25,11 @@ git commit <msg>
 ```
 
 `commit`을 통해 스테이지 된 파일을 기록한다.
+
+## log
+
+```shell
+git log
+```
+
+`log`를 통해 `commit` 기록을 확인한다.

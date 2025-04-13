@@ -24,6 +24,21 @@ pub fn git_add(path_str: &str) -> Result<(), git2::Error> {
     Ok(())
 }
 
+pub fn git_log() -> Result<Vec<String>, git2::Error> {
+    let repo = Repository::open(".")?;
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push_head()?;
+
+    let mut res = Vec::new();
+    for commit_id in revwalk {
+        let commit = repo.find_commit(commit_id?)?;
+        if let Some(msg) = commit.message() {
+            res.push(msg.to_string());
+        }
+    }
+    Ok(res)
+}
+
 fn git_commit(message: &str) -> Result<(), git2::Error> {
     let repo = Repository::open(".")?;
     let mut idx = repo.index()?;
@@ -90,6 +105,15 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            "log" => match git_log() {
+                Ok(logs) => {
+                    println!("커밋 로그:");
+                    for msg in logs {
+                        println!("{}", msg);
+                    }
+                }
+                Err(e) => println!("log error: {}", e),
+            },
             "q" => break,
             _ => println!("존재하지 않는 명령어임"),
         }
@@ -189,6 +213,24 @@ mod tests {
             commit_msg,
             "커밋 메시지가 다름"
         );
+    }
+
+    #[test]
+    #[serial]
+    fn test_git_log() {
+        let repo = get_repo();
+
+        let file_name = generate_random_file_name(".txt");
+        let file_path = Path::new(file_name.as_str());
+        File::create(file_path).expect("failed to create temp file");
+        git_add(file_name.as_str()).expect("failed to add file");
+
+        let commit_msg = "log test commit";
+
+        git_commit(commit_msg).expect("failed to commit");
+
+        let logs = git_log().expect("failed to get log");
+        assert_eq!(logs.first().unwrap().trim(), commit_msg, "커밋 로그가 다름");
     }
 
     fn generate_random_file_name(suffix: &str) -> String {
