@@ -2,13 +2,13 @@ use git2::{IndexAddOption, Repository};
 use std::io::{self, BufRead, Write};
 use std::path::Path;
 
-fn git_init() -> Result<(), git2::Error> {
-    let _repo = Repository::init(".");
+pub fn git_init() -> Result<(), git2::Error> {
+    let _repo = Repository::init(".")?;
     println!("repo init success.");
     Ok(())
 }
 
-fn git_add(path_str: &str) -> Result<(), git2::Error> {
+pub fn git_add(path_str: &str) -> Result<(), git2::Error> {
     let repo = Repository::open(".")?;
     let mut idx = repo.index()?;
 
@@ -24,7 +24,7 @@ fn git_add(path_str: &str) -> Result<(), git2::Error> {
     Ok(())
 }
 
-fn main() -> Result<(), git2::Error> {
+pub fn main() -> Result<(), git2::Error> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
@@ -61,4 +61,76 @@ fn main() -> Result<(), git2::Error> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use once_cell::sync::Lazy;
+    use serial_test::serial;
+    use std::fs::File;
+    use tempfile::TempDir;
+    use uuid::Uuid;
+
+    // 전역 공유 임시 디렉토리와 repo 초기화
+    static SHARED_REPO: Lazy<TempDir> = Lazy::new(|| {
+        let tmp_dir = TempDir::new().expect("failed to create temporary directory");
+        std::env::set_current_dir(tmp_dir.path()).expect("failed to set temporary directory");
+        git_init().expect("failed to git init");
+        tmp_dir
+    });
+
+    fn get_repo() -> Repository {
+        let _ = &*SHARED_REPO;
+        Repository::open(".").expect("failed to open repo")
+    }
+
+    #[test]
+    #[serial]
+    fn test_git_init() {
+        assert!(Path::new(".git").exists());
+    }
+
+    #[test]
+    #[serial]
+    fn test_git_add_specific_file() {
+        let repo = get_repo();
+
+        let file_name = generate_random_file_name(".txt");
+
+        let file_path = Path::new(file_name.as_str());
+        File::create(file_path).expect("failed to create temp file");
+
+        git_add(file_name.as_str()).expect("failed to add file");
+
+        let index = repo.index().expect("failed to get the index");
+        let entries: Vec<_> = index
+            .iter()
+            .filter(|entry| std::str::from_utf8(&entry.path).unwrap() == file_name.as_str())
+            .collect();
+        assert_eq!(entries.len(), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_git_add_all_files() {
+        let repo = get_repo();
+        let file_name = generate_random_file_name(".txt");
+
+        let file_path = Path::new(file_name.as_str());
+        File::create(file_path).expect("failed to create temp file");
+
+        git_add(".").expect("failed to add file");
+
+        let index = repo.index().unwrap();
+        let entries: Vec<_> = index
+            .iter()
+            .filter(|entry| std::str::from_utf8(&entry.path).unwrap() == file_name.as_str())
+            .collect();
+        assert_eq!(entries.len(), 1);
+    }
+
+    fn generate_random_file_name(suffix: &str) -> String {
+        format!("{}{}", Uuid::new_v4(), suffix)
+    }
 }
