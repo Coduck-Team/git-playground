@@ -42,3 +42,9 @@ git push <remote> <refspec>
 ```
 
 `push`를 통해 `commit`된 변경사항을 remote에 반영한다. 
+
+## revert
+```shell
+git revert
+```
+`revert`를 통해 `commit`을 되돌린다. 
