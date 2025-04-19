@@ -7,8 +7,7 @@ pub fn main() -> Result<(), git2::Error> {
     let mut stdout = io::stdout();
 
     loop {
-        // todo --help 구현
-        print!("명령어 입력 (init, add <path>, commit <msg>, log, push <remote> <refspec>, q): ");
+        print!("git playground(도움말 help): ");
         stdout.flush().unwrap();
         let mut input = String::new();
         stdin.lock().read_line(&mut input).unwrap();
@@ -20,6 +19,9 @@ pub fn main() -> Result<(), git2::Error> {
         }
 
         match tokens[0] {
+            "help" => {
+                commands::git_help();
+            }
             "init" => {
                 if let Err(e) = commands::git_init() {
                     println!("init error: {}", e);
