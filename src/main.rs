@@ -1,8 +1,6 @@
 mod commands;
 
-use git2::Repository;
 use std::io::{self, BufRead, Write};
-use std::path::Path;
 
 pub fn main() -> Result<(), git2::Error> {
     let stdin = io::stdin();
@@ -57,6 +55,16 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            "revert" => {
+                if tokens.len() < 2 {
+                    println!("입력 형식: revert <commit_id>");
+                } else {
+                    if let Err(e) = commands::git_revert(tokens[1]) {
+                        println!("revert error: {}", e);
+                    }
+                }
+            }
+            // TODO 로그 출력시 메시지만 보여줄게 아니라 해시도 보여줘야 함
             "log" => match commands::git_log() {
                 Ok(logs) => {
                     println!("커밋 로그:");
@@ -77,9 +85,11 @@ pub fn main() -> Result<(), git2::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use git2::Repository;
     use once_cell::sync::Lazy;
     use serial_test::serial;
     use std::fs::File;
+    use std::path::Path;
     use std::{env, fs};
     use tempfile::TempDir;
     use uuid::Uuid;
@@ -244,6 +254,42 @@ mod tests {
             "push test commit",
             "remote 커밋 메시지가 다름"
         );
+    }
+
+    #[test]
+    #[serial]
+    fn test_git_revert() {
+        let repo = get_repo();
+
+        let file_name = generate_random_file_name(".txt");
+
+        // 파일 작성
+        fs::write(&file_name, "비빔밥").expect("failed to write file");
+        commands::git_add(file_name.as_str()).expect("failed to add file");
+        let commit_msg = "비빔밥 먹고싶다.";
+        commands::git_commit(commit_msg).expect("failed to commit message");
+
+        let content = fs::read_to_string(file_name.as_str()).expect("failed to read file");
+        assert_eq!(content, "비빔밥", "파일 생성 및 변경 안됨");
+
+        // 파일 수정
+        fs::write(file_name.as_str(), "국밥").expect("failed to write file");
+        commands::git_add(file_name.as_str()).expect("failed to add file");
+        let commit_msg = "비빔밥 질렸다.";
+        commands::git_commit(commit_msg).expect("failed to commit message");
+
+        let content = fs::read_to_string(file_name.as_str()).expect("failed to read file");
+        assert_eq!(content, "국밥", "파일 변경 안됨");
+
+        // HEAD 커밋 id 가져오기
+        let head_commit = repo.head().expect("failed to get HEAD");
+        let commit_oid = head_commit.target().expect("HEAD refers to non-HEAD");
+
+        // git revert
+        commands::git_revert(&commit_oid.to_string()).expect("failed to revert");
+
+        let content = fs::read_to_string(file_name.as_str()).expect("failed to read file");
+        assert_eq!(content, "비빔밥", "파일 롤백 안됨");
     }
 
     fn generate_random_file_name(suffix: &str) -> String {
