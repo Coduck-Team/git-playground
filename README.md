@@ -48,3 +48,25 @@ git push <remote> <refspec>
 git revert
 ```
 `revert`를 통해 `commit`을 되돌린다. 
+
+## branch
+```shell
+git branch
+```
+`branch`를 통해 브랜치 목록을 보여준다.
+
+<br>
+
+```shell
+git branch <branch_name>
+```
+
+`branch`를 통해 <branch_name> 브랜치를 생성한다.
+
+<br>
+
+```shell
+git branch -d <branch_name>
+```
+
+`branch`를 통해 <branch_name> 브랜치를 삭제한다. 

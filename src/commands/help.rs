@@ -6,5 +6,6 @@ pub fn git_help() {
     println!("push <remote> <refspec>: 기록된 사항을 remote에 전송");
     println!("revert <commit_id>: commit된 기록을 롤백");
     println!("log: 로그 출력");
+    println!("branch: 브랜치 출력");
     println!("q: 종료")
 }
