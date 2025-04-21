@@ -77,6 +77,10 @@ pub fn main() -> Result<(), git2::Error> {
                     if let Err(e) = commands::git_create_branch(tokens[1]) {
                         println!("create branch error: {}", e);
                     }
+                } else if tokens.len() == 3 && tokens[1] == "-d" {
+                    if let Err(e) = commands::git_delete_branch(tokens[2]) {
+                        println!("delete branch error: {}", e);
+                    }
                 }
             }
             // TODO 로그 출력시 메시지만 보여줄게 아니라 해시도 보여줘야 함
