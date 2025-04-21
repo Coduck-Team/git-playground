@@ -66,6 +66,14 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            // 왜 log는 vec 반환해서 여기서 출력하는데 이 친구는 그렇게 안함.
+            // 뭐가 더 좋을까?
+            "branch" => match commands::git_show_branch() {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("branch error: {}", e);
+                }
+            },
             // TODO 로그 출력시 메시지만 보여줄게 아니라 해시도 보여줘야 함
             "log" => match commands::git_log() {
                 Ok(logs) => {
