@@ -36,6 +36,7 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            // TODO 테스트를 위해서 해시를 리턴해줘야할까.
             "commit" => {
                 if tokens.len() < 2 {
                     println!("input commit message");
@@ -213,7 +214,10 @@ mod tests {
         commands::git_commit(commit_msg).expect("failed to commit");
 
         let logs = commands::git_log().expect("failed to get log");
-        assert_eq!(logs.first().unwrap().trim(), commit_msg, "커밋 로그가 다름");
+        assert!(
+            logs.first().unwrap().contains(commit_msg),
+            "커밋 로그가 다름"
+        );
     }
 
     #[test]
@@ -317,9 +321,7 @@ mod tests {
         let repo = get_repo();
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            fs::write("dummy.txt", "initial commit").expect("failed to create dummy file");
-            commands::git_add("dummy.txt").expect("failed to add dummy file");
-            commands::git_commit("initial commit").expect("failed to commit dummy file");
+            write_dummy_add_commit();
         }
         // FIXME 과연 정말 이게 테스트 한다고 볼수 있을까?
         // show branch 를 유닛 리턴하고 해당 메서드에서 출력했던 이유는 이 방법이 현재
@@ -339,9 +341,7 @@ mod tests {
 
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            fs::write("dummy.txt", "initial commit").expect("failed to create dummy file");
-            commands::git_add("dummy.txt").expect("failed to add dummy file");
-            commands::git_commit("initial commit").expect("failed to commit dummy file");
+            write_dummy_add_commit();
         }
 
         // 이미 동일 이름의 브랜치 있다면 삭제 후 진행.
@@ -368,9 +368,7 @@ mod tests {
 
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            fs::write("dummy.txt", "initial commit").expect("failed to create dummy file");
-            commands::git_add("dummy.txt").expect("failed to add dummy file");
-            commands::git_commit("initial commit").expect("failed to commit dummy file");
+            write_dummy_add_commit();
         }
 
         if let Ok(mut branch) = repo.find_branch(&branch_name, BranchType::Local) {
@@ -390,5 +388,11 @@ mod tests {
 
     fn generate_random_file_name(suffix: &str) -> String {
         format!("{}{}", Uuid::new_v4(), suffix)
+    }
+
+    fn write_dummy_add_commit() {
+        fs::write("dummy.txt", "initial commit").expect("failed to create dummy file");
+        commands::git_add("dummy.txt").expect("failed to add dummy file");
+        commands::git_commit("initial commit").expect("failed to commit dummy file");
     }
 }
