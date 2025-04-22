@@ -8,8 +8,9 @@ pub fn git_log() -> Result<Vec<String>, git2::Error> {
     let mut res = Vec::new();
     for commit_id in revwalk {
         let commit = repo.find_commit(commit_id?)?;
-        if let Some(msg) = commit.message() {
-            res.push(msg.to_string());
+        let hash = commit.id().to_string();
+        if let Some(msg) = commit.summary() {
+            res.push(format!("{}: {}", hash, msg));
         }
     }
     Ok(res)
