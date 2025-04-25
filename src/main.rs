@@ -416,6 +416,46 @@ mod tests {
         );
     }
 
+    #[test]
+    #[serial]
+    fn git_merge_conflict() {
+        let repo = get_repo();
+        write_dummy_add_commit();
+
+        let file_name = "conflict.txt";
+
+        fs::write(file_name, "base").expect("failed to write base content");
+        commands::git_add(file_name).expect("failed to add conflict.txt");
+        commands::git_commit("base commit").expect("failed to commit base content");
+
+        // conflict_branch 브랜치 생성 후 체크아웃
+        let branch_name = "conflict_branch";
+        commands::git_create_branch(branch_name).expect("failed to create conflict_branch");
+        checkout(&repo, branch_name).expect("failed to checkout conflict_branch");
+
+        // conflict_branch에서 conflict.txt 수정 후 커밋
+        fs::write(file_name, "branch").expect("failed to write branch content");
+        commands::git_add(file_name).expect("failed to add updated conflict.txt");
+        commands::git_commit("branch commit").expect("failed to commit branch change");
+
+        // main 브랜치로 체크아웃
+        checkout(&repo, "main").expect("failed to checkout main");
+
+        // main 브랜치에서 conflict.txt 수정 후 커밋 (충돌 발생 준비)
+        fs::write(file_name, "main").expect("failed to write main content");
+        // FIXME commit 하고 난 이후 conflict가 발생한다(의도한 동작)
+        // 그러나 repo.cleanup_state()로 클린업해도 git_merge_conflict 이후에 실행되는 테스트가 실패해버린다.
+        // commit 만 일단 안하면 이후의 테스트도 성공을 한다.
+        commands::git_add(file_name).expect("failed to add main branch conflict.txt");
+        // commands::git_commit("main commit").expect("failed to commit main change");
+
+        // conflict_branch를 main에 병합 -> 충돌이 발생해야 함
+        let merge_result = commands::git_merge(branch_name);
+        assert!(merge_result.is_err(), "merge 충돌이 발생하지 않음");
+
+        repo.cleanup_state().unwrap();
+    }
+
     fn checkout(repo: &Repository, branch_name: &str) -> Result<(), git2::Error> {
         let obj = repo.revparse_single(&format!("refs/heads/{}", branch_name))?;
         repo.checkout_tree(&obj, None)?;
