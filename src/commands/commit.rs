@@ -24,3 +24,38 @@ pub fn git_commit(message: &str) -> Result<(), git2::Error> {
     println!("commit created: {}", commit_oid);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands;
+    use crate::tests::get_repo;
+    use serial_test::serial;
+    use std::fs::File;
+    use std::path::Path;
+
+    #[test]
+    #[serial]
+    fn test_git_commit() {
+        let repo = get_repo();
+
+        let file_name = "hello.txt";
+        let file_path = Path::new(file_name);
+        File::create(file_path).expect("failed to create temp file");
+        commands::git_add(file_name).expect("failed to add file");
+
+        let commit_msg = "test commit msg";
+        commands::git_commit(commit_msg).expect("failed to commit message");
+
+        let head_commit = {
+            let head = repo.head().expect("failed to get HEAD");
+            let commit_oid = head.target().expect("HEAD refers to non-HEAD");
+            repo.find_commit(commit_oid).expect("failed to find commit")
+        };
+
+        assert_eq!(
+            head_commit.message().unwrap(),
+            commit_msg,
+            "커밋 메시지가 다름"
+        );
+    }
+}
