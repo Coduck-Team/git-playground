@@ -1,6 +1,6 @@
 use git2::Repository;
 
-pub fn git_commit(message: &str) -> Result<(), git2::Error> {
+pub fn git_commit(message: &str) -> Result<String, git2::Error> {
     let repo = Repository::open(".")?;
     let mut idx = repo.index()?;
 
@@ -22,7 +22,7 @@ pub fn git_commit(message: &str) -> Result<(), git2::Error> {
 
     let commit_oid = repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &parents)?;
     println!("commit created: {}", commit_oid);
-    Ok(())
+    Ok(commit_oid.to_string())
 }
 
 #[cfg(test)]

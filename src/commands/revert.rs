@@ -61,7 +61,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_git_revert() {
-        let repo = get_repo();
+        let _repo = get_repo();
 
         let file_name = "revert.txt";
 
@@ -78,17 +78,13 @@ mod tests {
         fs::write(file_name, "국밥").expect("failed to write file");
         commands::git_add(file_name).expect("failed to add file");
         let commit_msg = "비빔밥 질렸다.";
-        commands::git_commit(commit_msg).expect("failed to commit message");
+        let head_commit = commands::git_commit(commit_msg).expect("failed to commit message");
 
         let content = fs::read_to_string(file_name).expect("failed to read file");
         assert_eq!(content, "국밥", "파일 변경 안됨");
 
-        // HEAD 커밋 id 가져오기
-        let head_commit = repo.head().expect("failed to get HEAD");
-        let commit_oid = head_commit.target().expect("HEAD refers to non-HEAD");
-
         // git revert
-        commands::git_revert(&commit_oid.to_string()).expect("failed to revert");
+        commands::git_revert(&head_commit).expect("failed to revert");
 
         let content = fs::read_to_string(file_name).expect("failed to read file");
         assert_eq!(content, "비빔밥", "파일 롤백 안됨");

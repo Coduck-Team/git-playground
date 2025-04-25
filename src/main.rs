@@ -35,7 +35,6 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
-            // TODO 테스트를 위해서 해시를 리턴해줘야할까.
             "commit" => {
                 if tokens.len() < 2 {
                     println!("input commit message");
@@ -83,7 +82,6 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
-            // TODO 로그 출력시 메시지만 보여줄게 아니라 해시도 보여줘야 함
             "log" => match commands::git_log() {
                 Ok(logs) => {
                     println!("커밋 로그:");
