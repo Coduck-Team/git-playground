@@ -386,6 +386,43 @@ mod tests {
         assert!(repo.find_branch(&branch_name, BranchType::Local).is_err());
     }
 
+    #[test]
+    #[serial]
+    fn git_merge_success_no_conflict() {
+        let repo = get_repo();
+        write_dummy_add_commit();
+
+        let feature_branch = "feature";
+        commands::git_create_branch(feature_branch).expect("failed to create feature branch");
+        // feature로 checkout
+        checkout(&repo, feature_branch).unwrap();
+
+        // feature 브랜치에서 새 커밋 생성
+        let file_name = "new_file.txt".to_string();
+        fs::write(&file_name, "feature 추가").unwrap();
+        commands::git_add(&file_name).unwrap();
+        commands::git_commit("feat: add new file").unwrap();
+
+        let main_branch = "main";
+        checkout(&repo, main_branch).unwrap();
+
+        commands::git_merge(feature_branch).expect("failed to merge feature branch");
+
+        let head_commit = repo.head().unwrap().peel_to_commit().unwrap();
+        assert_eq!(
+            head_commit.message().unwrap(),
+            "Merge commit",
+            "merge 커밋 메시지가 다름"
+        );
+    }
+
+    fn checkout(repo: &Repository, branch_name: &str) -> Result<(), git2::Error> {
+        let obj = repo.revparse_single(&format!("refs/heads/{}", branch_name))?;
+        repo.checkout_tree(&obj, None)?;
+        repo.set_head(&format!("refs/heads/{}", branch_name))?;
+        Ok(())
+    }
+
     fn generate_random_file_name(suffix: &str) -> String {
         format!("{}{}", Uuid::new_v4(), suffix)
     }
