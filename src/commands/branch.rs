@@ -52,7 +52,7 @@ pub fn git_delete_branch(branch_name: &str) -> Result<(), git2::Error> {
 #[cfg(test)]
 mod tests {
     use crate::commands;
-    use crate::tests::get_repo;
+    use crate::test_helpers::{get_repo, write_dummy_add_commit};
     use git2::BranchType;
     use serial_test::serial;
     use uuid::Uuid;
@@ -63,7 +63,7 @@ mod tests {
         let repo = get_repo();
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            crate::tests::write_dummy_add_commit();
+            write_dummy_add_commit();
         }
         // FIXME 과연 정말 이게 테스트 한다고 볼수 있을까?
         // show branch 를 유닛 리턴하고 해당 메서드에서 출력했던 이유는 이 방법이 현재
@@ -83,7 +83,7 @@ mod tests {
 
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            crate::tests::write_dummy_add_commit();
+            write_dummy_add_commit();
         }
 
         // 이미 동일 이름의 브랜치 있다면 삭제 후 진행.
@@ -110,7 +110,7 @@ mod tests {
 
         // 이게 젤 처음이라서 에러가 발생한다면,
         if repo.head().is_err() {
-            crate::tests::write_dummy_add_commit();
+            write_dummy_add_commit();
         }
 
         if let Ok(mut branch) = repo.find_branch(&branch_name, BranchType::Local) {

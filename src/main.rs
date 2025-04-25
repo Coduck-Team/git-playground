@@ -1,5 +1,4 @@
-mod commands;
-
+use git_playground::commands;
 use std::io::{self, BufRead, Write};
 
 pub fn main() -> Result<(), git2::Error> {
@@ -100,39 +99,4 @@ pub fn main() -> Result<(), git2::Error> {
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use git2::Repository;
-    use once_cell::sync::Lazy;
-    use std::{env, fs};
-    use tempfile::TempDir;
-
-    // 전역 공유 임시 디렉토리와 repo 초기화
-    static SHARED_REPO: Lazy<TempDir> = Lazy::new(|| {
-        let tmp_dir = TempDir::new().expect("failed to create temporary directory");
-        env::set_current_dir(tmp_dir.path()).expect("failed to set temporary directory");
-        commands::git_init().expect("failed to git init");
-        tmp_dir
-    });
-
-    pub fn get_repo() -> Repository {
-        env::set_current_dir(SHARED_REPO.path()).expect("failed to set temporary directory");
-        Repository::open(".").expect("failed to open repo")
-    }
-
-    pub fn checkout(repo: &Repository, branch_name: &str) -> Result<(), git2::Error> {
-        let obj = repo.revparse_single(&format!("refs/heads/{}", branch_name))?;
-        repo.checkout_tree(&obj, None)?;
-        repo.set_head(&format!("refs/heads/{}", branch_name))?;
-        Ok(())
-    }
-
-    pub fn write_dummy_add_commit() {
-        fs::write("dummy.txt", "initial commit").expect("failed to create dummy file");
-        commands::git_add("dummy.txt").expect("failed to add dummy file");
-        commands::git_commit("initial commit").expect("failed to commit dummy file");
-    }
 }

@@ -54,7 +54,7 @@ pub fn git_revert(commit_id: &str) -> Result<(), git2::Error> {
 #[cfg(test)]
 mod tests {
     use crate::commands;
-    use crate::tests::get_repo;
+    use crate::test_helpers::get_repo;
     use serial_test::serial;
     use std::fs;
 

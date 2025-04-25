@@ -28,7 +28,7 @@ pub fn git_commit(message: &str) -> Result<(), git2::Error> {
 #[cfg(test)]
 mod tests {
     use crate::commands;
-    use crate::tests::get_repo;
+    use crate::test_helpers::get_repo;
     use serial_test::serial;
     use std::fs::File;
     use std::path::Path;

@@ -41,7 +41,7 @@ pub fn git_merge(branch: &str) -> Result<(), git2::Error> {
 #[cfg(test)]
 mod tests {
     use crate::commands;
-    use crate::tests::{get_repo, write_dummy_add_commit};
+    use crate::test_helpers::{checkout, get_repo, write_dummy_add_commit};
     use serial_test::serial;
     use std::fs;
 
@@ -54,7 +54,7 @@ mod tests {
         let feature_branch = "feature";
         commands::git_create_branch(feature_branch).expect("failed to create feature branch");
         // feature로 checkout
-        crate::tests::checkout(&repo, feature_branch).unwrap();
+        checkout(&repo, feature_branch).unwrap();
 
         // feature 브랜치에서 새 커밋 생성
         let file_name = "new_file.txt".to_string();
@@ -63,7 +63,7 @@ mod tests {
         commands::git_commit("feat: add new file").unwrap();
 
         let main_branch = "main";
-        crate::tests::checkout(&repo, main_branch).unwrap();
+        checkout(&repo, main_branch).unwrap();
 
         commands::git_merge(feature_branch).expect("failed to merge feature branch");
 
@@ -90,7 +90,7 @@ mod tests {
         // conflict_branch 브랜치 생성 후 체크아웃
         let branch_name = "conflict_branch";
         commands::git_create_branch(branch_name).expect("failed to create conflict_branch");
-        crate::tests::checkout(&repo, branch_name).expect("failed to checkout conflict_branch");
+        checkout(&repo, branch_name).expect("failed to checkout conflict_branch");
 
         // conflict_branch에서 conflict.txt 수정 후 커밋
         fs::write(file_name, "branch").expect("failed to write branch content");
@@ -98,7 +98,7 @@ mod tests {
         commands::git_commit("branch commit").expect("failed to commit branch change");
 
         // main 브랜치로 체크아웃
-        crate::tests::checkout(&repo, "main").expect("failed to checkout main");
+        checkout(&repo, "main").expect("failed to checkout main");
 
         // main 브랜치에서 conflict.txt 수정 후 커밋 (충돌 발생 준비)
         fs::write(file_name, "main").expect("failed to write main content");
