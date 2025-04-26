@@ -1,4 +1,6 @@
 use git2::{MergeOptions, Repository};
+use std::io::BufRead;
+use std::{fs, io};
 
 pub fn git_merge(branch: &str) -> Result<(), git2::Error> {
     let repo = Repository::open(".")?;
@@ -15,7 +17,26 @@ pub fn git_merge(branch: &str) -> Result<(), git2::Error> {
     // 충돌 여부 확인
     let mut index = repo.index()?;
     if index.has_conflicts() {
-        repo.cleanup_state()?;
+        println!("충돌 파일 목록:");
+        for conflict in index.conflicts()? {
+            if let Ok(conflict) = conflict {
+                if let Some(entry) = conflict.our {
+                    let path = String::from_utf8_lossy(&entry.path).to_string();
+                    println!("* {path}");
+
+                    if let Ok(file_content) = fs::read_to_string(&path) {
+                        let reader = io::Cursor::new(&file_content);
+                        for (line_no, line) in reader.lines().enumerate() {
+                            if let Ok(line) = line {
+                                println!("{line_no}: {line}");
+                            }
+                        }
+                    } else {
+                        println!("파일 읽기 실패");
+                    }
+                }
+            }
+        }
         return Err(git2::Error::from_str("머지 충돌 발생"));
     }
 
@@ -42,6 +63,7 @@ pub fn git_merge(branch: &str) -> Result<(), git2::Error> {
 mod tests {
     use crate::commands;
     use crate::test_helpers::{checkout, get_repo, write_dummy_add_commit};
+    use git2::build::CheckoutBuilder;
     use serial_test::serial;
     use std::fs;
 
@@ -93,7 +115,7 @@ mod tests {
         checkout(&repo, branch_name).expect("failed to checkout conflict_branch");
 
         // conflict_branch에서 conflict.txt 수정 후 커밋
-        fs::write(file_name, "branch").expect("failed to write branch content");
+        fs::write(file_name, "Hello World").expect("failed to write branch content");
         commands::git_add(file_name).expect("failed to add updated conflict.txt");
         commands::git_commit("branch commit").expect("failed to commit branch change");
 
@@ -101,17 +123,19 @@ mod tests {
         checkout(&repo, "main").expect("failed to checkout main");
 
         // main 브랜치에서 conflict.txt 수정 후 커밋 (충돌 발생 준비)
-        fs::write(file_name, "main").expect("failed to write main content");
+        fs::write(file_name, "GoodBye World").expect("failed to write main content");
         // FIXME commit 하고 난 이후 conflict가 발생한다(의도한 동작)
         // 그러나 repo.cleanup_state()로 클린업해도 git_merge_conflict 이후에 실행되는 테스트가 실패해버린다.
         // commit 만 일단 안하면 이후의 테스트도 성공을 한다.
         commands::git_add(file_name).expect("failed to add main branch conflict.txt");
-        // commands::git_commit("main commit").expect("failed to commit main change");
+        commands::git_commit("main commit").expect("failed to commit main change");
 
         // conflict_branch를 main에 병합 -> 충돌이 발생해야 함
         let merge_result = commands::git_merge(branch_name);
         assert!(merge_result.is_err(), "merge 충돌이 발생하지 않음");
 
-        repo.cleanup_state().unwrap();
+        let mut checkout_builder = CheckoutBuilder::new();
+        checkout_builder.force();
+        repo.checkout_head(Some(&mut checkout_builder)).unwrap();
     }
 }
