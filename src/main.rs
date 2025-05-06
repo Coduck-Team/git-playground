@@ -82,6 +82,17 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            "checkout" => {
+                if tokens.len() != 2 {
+                    println!("입력 형식: checkout <name>");
+                } else {
+                    if let Err(e) = commands::git_checkout(tokens[1]) {
+                        println!("checkout error: {}", e);
+                    } else {
+                        println!("Switched to branch '{}'", tokens[1]);
+                    }
+                }
+            }
             "log" => match commands::git_log() {
                 Ok(logs) => {
                     println!("커밋 로그:");

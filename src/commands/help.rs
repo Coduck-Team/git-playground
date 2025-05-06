@@ -7,5 +7,6 @@ pub fn git_help() {
     println!("revert <commit_id>: commit된 기록을 롤백");
     println!("log: 로그 출력");
     println!("branch: 브랜치 출력");
+    println!("checkout <name>: <name> 브랜치로 체크아웃");
     println!("q: 종료")
 }

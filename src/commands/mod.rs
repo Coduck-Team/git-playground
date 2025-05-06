@@ -1,5 +1,6 @@
 pub mod add;
 pub mod branch;
+pub mod checkout;
 pub mod commit;
 pub mod help;
 pub mod init;
@@ -10,6 +11,7 @@ pub mod revert;
 
 pub use add::git_add;
 pub use branch::*;
+pub use checkout::git_checkout;
 pub use commit::git_commit;
 pub use help::git_help;
 pub use init::git_init;
