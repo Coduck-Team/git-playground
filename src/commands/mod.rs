@@ -7,6 +7,7 @@ pub mod init;
 pub mod log;
 pub mod merge;
 pub mod push;
+pub mod restore;
 pub mod revert;
 
 pub use add::git_add;
@@ -18,4 +19,5 @@ pub use init::git_init;
 pub use log::git_log;
 pub use merge::git_merge;
 pub use push::git_push;
+pub use restore::git_restore;
 pub use revert::git_revert;
