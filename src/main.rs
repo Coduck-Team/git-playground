@@ -93,6 +93,17 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            "restore" => {
+                if tokens.len() < 2 {
+                    println!("복원할 파일 경로를 입력해주세요.");
+                } else {
+                    if let Err(e) = commands::git_restore(tokens[1]) {
+                        println!("restore error: {}", e);
+                    } else {
+                        println!("파일 복원 완료: {}", tokens[1]);
+                    }
+                }
+            }
             "log" => match commands::git_log() {
                 Ok(logs) => {
                     println!("커밋 로그:");
