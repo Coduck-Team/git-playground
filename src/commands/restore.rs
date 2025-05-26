@@ -16,6 +16,7 @@ pub fn git_restore(path: &str) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands;
     use crate::test_helpers::{get_repo, write_dummy_add_commit};
     use serial_test::serial;
     use std::fs;
@@ -33,8 +34,8 @@ mod tests {
         let original_content = "original content";
         // 파일 생성 후 add, commit 수행
         fs::write(file_name, original_content).expect("파일 작성 실패");
-        crate::commands::git_add(file_name).expect("파일 stage 실패");
-        crate::commands::git_commit("commit original content").expect("커밋 실패");
+        commands::git_add(file_name).expect("파일 stage 실패");
+        commands::git_commit("commit original content").expect("커밋 실패");
 
         // 파일 내용을 변경
         let modified_content = "modified content";

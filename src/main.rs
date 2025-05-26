@@ -104,6 +104,19 @@ pub fn main() -> Result<(), git2::Error> {
                     }
                 }
             }
+            "reset" => {
+                if tokens.len() != 3 {
+                    println!("입력 형식: reset <파일 경로> <soft|mixed|hard>");
+                } else {
+                    let file_path = tokens[1];
+                    let reset_type = tokens[2];
+                    if let Err(e) = commands::git_reset(file_path, reset_type) {
+                        println!("reset error: {}", e);
+                    } else {
+                        println!("reset 완료: {} ({})", file_path, reset_type);
+                    }
+                }
+            }
             "log" => match commands::git_log() {
                 Ok(logs) => {
                     println!("커밋 로그:");
